@@ -16,17 +16,16 @@ import string,numpy,pylab,sys,getopt
 # ======================================================================
 
 def CornerPlotter(argv):
-
-  USAGE = """
+  """
   NAME
     CornerPlotter.py
 
   PURPOSE
-    Plot 2D projections of ND parameter space as triangular 
+    Plot 2D projections of ND parameter space as triangular
     array of panels. Include 1D marginalised distributions
     on the diagonal.
 
-  COMMENTS  
+  COMMENTS
     Expected data format is plain text, header marked by # in column 1,  with
     header lines listing:
       1) Parameter names separated by commas. These names will
@@ -43,23 +42,23 @@ def CornerPlotter(argv):
   INPUTS
     file1,color1  Name of textfile containing data, and color to use
     file2,color2   etc.
-         
+
   OPTIONAL INPUTS
     -n --columns  List of columns to plot [all] NB. inputs are one-indexed!
     -w iw         Index of column containing weight of sample
     -L iL         Index of column containing likelihood of sample
     --plot-points Plot the samples themselves
     -o --output   Name of output file
- 
+
   OUTPUTS
     stdout        Useful information
     pngfile       Output plot in png format
 
-  
+
   EXAMPLES
-  
+
     CornerPlotter.py -w 1 -L 2 --plot-points J2141-disk_bulge.txt,red,shaded
-    
+
     CornerPlotter.py -w 1 -L 2 -n 3,4,5 J2141-disk_bulge.txt,gray,outlines
 
   BUGS
@@ -79,7 +78,7 @@ def CornerPlotter(argv):
   except getopt.GetoptError, err:
       # print help information and exit:
       print str(err) # will print something like "option -a not recognized"
-      print USAGE
+      print __doc__
       return
 
   vb = False
@@ -89,7 +88,7 @@ def CornerPlotter(argv):
   eps = False
   columns = 'All'
   output = 'Null'
-  # NB. wcol and Lcol are assumed to be entered indexed to 1! 
+  # NB. wcol and Lcol are assumed to be entered indexed to 1!
   for o,a in opts:
       if o in ("-v", "--verbose"):
           vb = True
@@ -110,8 +109,8 @@ def CornerPlotter(argv):
           return
       else:
           assert False, "unhandled option"
-   
-  # Check for datafiles in array args:  
+
+  # Check for datafiles in array args:
   if len(args) > 0:
     datafiles = []
     colors = []
@@ -124,14 +123,14 @@ def CornerPlotter(argv):
       datafiles = datafiles + [pieces[0]]
       colors = colors + [pieces[1]]
       styles = styles + [pieces[2]]
-    if vb: 
+    if vb:
       print "Making corner plot of data in following files:",datafiles
       print "using following colors:",colors
       if eps: "Output will be postscript"
   else :
     print USAGE
-    return 
-    
+    return
+
   # --------------------------------------------------------------------
 
   # Start figure, set up viewing area:
@@ -156,32 +155,32 @@ def CornerPlotter(argv):
   # --------------------------------------------------------------------
 
   # Plot files in turn, using specified color scheme.
-  
-  for k in range(len(datafiles)):  
+
+  for k in range(len(datafiles)):
 
     datafile = datafiles[k]
     color = colors[k]
     #     if (color == 'black' or eps):
     #       style = 'outlines'
     #     else:
-    #       style = 'shaded'  
+    #       style = 'shaded'
     style = styles[k]
     legend = datafile
-   
+
     print "\nPlotting PDFs given in "+datafile+" as "+color+" "+style
 
     # Read in data:
     data = numpy.loadtxt(datafile)
-    
-    # Start figuring out how many parameters we have - index will be a 
+
+    # Start figuring out how many parameters we have - index will be a
     # list of column numbers containg the parameter values.
     # NB. ALL files must have same parameters/weights structure!
     if ( k == 0 ):
       npars = data.shape[1]
       index = numpy.arange(npars)
 
-    # Some cols may not be data, adjust index accordingly. 
-    
+    # Some cols may not be data, adjust index accordingly.
+
     # Weights/importances:
     if wcol >= 0 and wcol < data.shape[1]:
       if vb: print "using weight in column: ",wcol
@@ -196,7 +195,7 @@ def CornerPlotter(argv):
         print "WARNING: only ",data.shape[1]," columns are available"
         print "Setting weights to 1"
       wht = 0.0*data[:,0].copy() + 1.0
-    
+
     # Likelihood values:
     if Lcol >= 0:
       Lhood = data[:,Lcol].copy()
@@ -207,7 +206,7 @@ def CornerPlotter(argv):
       if vb: print "using lhood in column: ",Lcol
     else:
       Lhood = 0.0*data[:,0].copy() + 1.0
- 
+
     # Having done all that, optionally overwrite index with specified list
     # of column numbers. Note conversion to zero-indexed python:
     if columns != 'All':
@@ -217,48 +216,48 @@ def CornerPlotter(argv):
         index.append(int(piece) - 1)
       npars = len(index)
       print "Only using data in",npars,"columns: "
-        
+
     # Now parameter list is in index - which is fixed for other datasets
-             
+
     # Font sizes - can only be set when no. of panels is known:
     #   Big font sizes: {npars,bfs}={1,14},{2,13},{3,12},{4,10}
     if npars < 4:
       bfs = 15 - npars
     else:
-      bfs = 10  
+      bfs = 10
     sfs = bfs - 2
-    
+
     params = { 'axes.labelsize': bfs,
                 'text.fontsize': bfs,
               'legend.fontsize': sfs,
               'xtick.labelsize': sfs,
               'ytick.labelsize': sfs}
     pylab.rcParams.update(params)
-  
-    # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
-    
+
+    # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
     # 1st data file defines labels and parameter ranges:
 
     if k == 0:
 
       limits = numpy.zeros([npars,2])
       hmax = numpy.zeros([npars])
-    
+
       # NB: file MUST be of correct format!
-    
+
       # Read comma-separated string axis labels from line 1:
       file = open(datafile)
       labelsline = file.readline().strip()
       # Read comma-separated axis limits from line 2
       limitsline = file.readline().strip()
       file.close()
-      
+
       lineafterhash = labelsline.split('#')
       if len(lineafterhash) != 2:
         print 'ERROR: first line of file is not #-marked, comma-separated list of labels'
         exit()
       else:
-        labels = lineafterhash[1].split(',')             
+        labels = lineafterhash[1].split(',')
         if vb: print "Plotting",npars," parameters: ",labels
 
       lineafterhash = limitsline.split('#')
@@ -266,7 +265,7 @@ def CornerPlotter(argv):
         if vb: print 'No axis limits found, using 5-sigma ranges'
         usedylimits = 1
       else:
-        limitstrings = lineafterhash[1].split(',')             
+        limitstrings = lineafterhash[1].split(',')
         nlimits = len(limitstrings)
         if (nlimits/2 != data.shape[1]):
           print 'ERROR: found ',nlimits,'axis limits for',data.shape[1],'columns:'
@@ -281,9 +280,9 @@ def CornerPlotter(argv):
             ii = ii + 1
           if vb: print "Plot limits: ",limits
         usedylimits = 0
-    
+
     # OK, back to any datafile.
-                               
+
     # Set up dynamic axis limits, and smoothing scales:
     dylimits = numpy.zeros([npars,2])
     smooth = numpy.zeros(npars)
@@ -298,13 +297,13 @@ def CornerPlotter(argv):
       # Cf Jullo et al 2007, who use a bin size given by
       #  w = 2*IQR/N^(1/3)  for N samples, interquartile range IQR
       # For a Gaussian, IQR is not too different from 2sigma. 4sigma/N^1/3?
-      # Also need N to be the effective number of parameters - return 
+      # Also need N to be the effective number of parameters - return
       # form meansd as sum of weights!
       # Set 5 sigma limits:
       dylimits[i,0] = mean - 5*stdev
       dylimits[i,1] = mean + 5*stdev
 
-    # Now set up bin arrays based on dynamic limits, 
+    # Now set up bin arrays based on dynamic limits,
     # and convert smoothing to pixels:
     bins = numpy.zeros([npars,nbins])
     for i in range(npars):
@@ -313,10 +312,10 @@ def CornerPlotter(argv):
       smooth[i] = smooth[i]/((dylimits[i,1]-dylimits[i,0])/float(nbins))
       if vb: print "col = ",col," smooth = ",smooth[i]
       if vb: print "binning limits:",dylimits[i,0],dylimits[i,1]
-                  
+
     if (k == 0):
       # Finalise limits, again at 1st datafile:
-      if (usedylimits == 1): limits = dylimits 
+      if (usedylimits == 1): limits = dylimits
 
       for i in range(npars):
         limits[i,0] = limits[i,0] + tiny*abs(limits[i,0])
@@ -324,8 +323,8 @@ def CornerPlotter(argv):
 
     # Good - limits are set.
 
-    # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
-    
+    # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
     # Loop over plotting panels. Arrangement is bottom left hand corner,
     # most important parameter as x in first column, (row=0,col=0) is
     # top left hand corner panel.
@@ -382,11 +381,11 @@ def CornerPlotter(argv):
           # Turn off the x axis tick labels for all but the last 1D panel:
           if j<(npars-1):
             ax.xaxis.set_major_formatter(pylab.NullFormatter())
-          pylab.xticks(rotation=45)  
+          pylab.xticks(rotation=45)
           # Label x axis, only on the bottom panels:
           if j==npars-1:
             pylab.xlabel(labels[col])
-            
+
         else:
 
           # Get 2nd data set:
@@ -397,11 +396,11 @@ def CornerPlotter(argv):
           if vb: print "Calling pdf2d for col,row = ",col,row
           fwhm = 0.5*(smooth[i]+smooth[j])
           pdf2d(d1,d2,wht,bins[i],bins[j],fwhm,color,style)
-          
+
           # If we are just plotting one file, overlay samples:
-          if (len(datafiles) == 1 and plotpoints): 
+          if (len(datafiles) == 1 and plotpoints):
             pylab.plot(d1,d2,'ko',ms=0.1)
-          
+
           # Force axes to obey limits:
           pylab.axis([limits[i,0],limits[i,1],limits[j,0],limits[j,1]])
           # Adjust axes of 2D plots:
@@ -413,7 +412,7 @@ def CornerPlotter(argv):
             # Turn off the x axis tick labels
             ax.xaxis.set_major_formatter(pylab.NullFormatter())
           # Rotate ticks so that axis labels don't overlap
-          pylab.xticks(rotation=45)  
+          pylab.xticks(rotation=45)
           # Label x axes, only on the bottom panels:
           if j==npars-1:
             pylab.xlabel(labels[col])
@@ -427,18 +426,18 @@ def CornerPlotter(argv):
 
       # endfor
     # endfor
-   
+
   # endfor
 
-  # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
-    
+  # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
   # Plot graph to file:
   if output == 'Null':
     if eps:
       output = "cornerplot.eps"
     else:
       output = "cornerplot.png"
-  
+
   pylab.savefig(output,dpi=300)
   print "\nFigure saved to file:",output
 
@@ -468,7 +467,7 @@ def pdf1d(d,imp,bins,smooth,color):
   median = pct50
   errplus = numpy.abs(pct84 - pct50)
   errminus = numpy.abs(pct50 - pct16)
-  
+
   # Check for failure:
   if errplus == 0 or errminus == 0:
     print "ERROR: zero width credible region. Here's the histogram:"
@@ -478,11 +477,11 @@ def pdf1d(d,imp,bins,smooth,color):
     print "ERROR: And here's the requested bins:"
     print bins
     sys.exit()
-  
+
 #  result = "$"+str(median)+"^{+"+str(errplus)+"}_{-"+str(errminus)+"}$"
   result = format_point_estimate(median,errplus,errminus)
 
-  # Plot the PDF   
+  # Plot the PDF
   pylab.plot(positions[:-1],curve,drawstyle='steps-mid',color=color)
 
   # # Smooth the PDF:
@@ -490,10 +489,10 @@ def pdf1d(d,imp,bins,smooth,color):
 
   # print "1D histogram: min,max = ",curve.min(),curve.max()
   hmax = curve.max()
-  
+
 #   print "Plotted 1D histogram with following axes limits:"
 #   print "  extent =",(bins[0],bins[-1])
-  
+
   return hmax,result
 
 # ======================================================================
@@ -511,7 +510,7 @@ def pdf2d(ax,ay,imp,xbins,ybins,smooth,color,style):
 
   # Smooth the PDF:
   H = ndimage.gaussian_filter(H,smooth)
-  
+
   sortH = numpy.sort(H.flatten())
   cumH = sortH.cumsum()
   # 1, 2, 3-sigma, for the old school:
@@ -524,7 +523,7 @@ def pdf2d(ax,ay,imp,xbins,ybins,smooth,color,style):
 #   print "Contour levels: ",[lvl00,lvl68,lvl95,lvl99]
 
   if style == 'shaded':
-  
+
     # Plot shaded areas first:
     pylab.contourf(H.T,[lvl99,lvl95],colors=color,alpha=0.1,\
                    extent=(xbins[0],xbins[-1],ybins[0],ybins[-1]))
@@ -533,8 +532,8 @@ def pdf2d(ax,ay,imp,xbins,ybins,smooth,color,style):
     pylab.contourf(H.T,[lvl68,lvl00],colors=color,alpha=0.7,\
                    extent=(xbins[0],xbins[-1],ybins[0],ybins[-1]))
   # endif
-  
-  # Always plot outlines:  
+
+  # Always plot outlines:
   pylab.contour(H.T,[lvl68,lvl95,lvl99],colors=color,\
                   extent=(xbins[0],xbins[-1],ybins[0],ybins[-1]))
 
@@ -551,7 +550,7 @@ def meansd(x,wht=[0]):
   elif len(wht) != N:
     print "ERROR: data and wht arrays don't match in meansd:",N,len(wht)
     sys.exit()
-    
+
   mean = numpy.sum(x*wht)/numpy.sum(wht)
   var = numpy.sum((x-mean)*wht*(x-mean))/numpy.sum(wht)
   stdev = numpy.sqrt((var)*float(N)/float(N-1))
@@ -562,26 +561,26 @@ def meansd(x,wht=[0]):
 # Subroutine to return median and percentiles of numpy.array x
 
 def percentiles(x,w):
-  
+
   # First sort the sample x values, and find corresponding weights:
   index = numpy.argsort(x)
   xx = x[index]
   ww = w[index]
-  
+
   # Check weights - if they are all the same there is a shortcut!
-  
+
   wmin = numpy.min(ww)
   wmax = numpy.max(ww)
-  
+
   if wmin == wmax:
 
     N = len(xx)
     mark = numpy.array([int(0.16*N),int(0.50*N),int(0.84*N)],dtype=int)
-  
+
     p = xx[mark]
-  
+
   else:
-  
+
     # Make weighted array, and work out values of integral to each percentile:
     wx = xx*ww
     N = numpy.sum(wx)
@@ -595,7 +594,7 @@ def percentiles(x,w):
         p[j] = x[i]
         j += 1
     # Done. This will probably take ages...
-    
+
   return p
 
 # ======================================================================
@@ -604,42 +603,42 @@ def format_point_estimate(x,a,b):
 
 # How many sf should we use? a and b are positive definite, so take logs:
   # print "x,a,b = ",x,a,b
-  
+
   if a <= 0 or b <= 0:
     print "ERROR: this should not happen: a,b = ",a,b
     sys.exit()
-  
+
   loga = numpy.log10(a)
-  if loga > 0: 
+  if loga > 0:
     intloga = int(loga)
   else:
     intloga = int(loga) - 1
   logb = numpy.log10(a)
-  if logb > 0: 
+  if logb > 0:
     intlogb = int(logb)
   else:
     intlogb = int(logb) - 1
-  # print "intloga,intlogb = ", intloga,intlogb 
+  # print "intloga,intlogb = ", intloga,intlogb
   # Go one dp further for extra precision...
   k = numpy.min([intloga,intlogb]) - 1
   base = 10.0**k
   # print "k,base = ",k,base
-  
+
 # Now round off numbers to this no. of SF:
   if k >=0:
     fmt = "%d"
   else:
-    fmt = "%."+str(abs(k))+"f"  
+    fmt = "%."+str(abs(k))+"f"
   rx = fmt % (base * nint(x/base))
   ra = fmt % (base * nint(a/base))
   rb = fmt % (base * nint(b/base))
   # print "fmt = ",fmt
   # print "base*nint(x/base) = ",base*nint(x/base)
   # print "rx,ra,rb = ",rx,ra,rb
-  
+
   estimate = "$ "+rx+"^{+"+ra+"}_{-"+rb+"} $"
   # print "estimate = ",estimate
-  
+
   return estimate
 
 def nint(x):
@@ -649,8 +648,8 @@ def nint(x):
     ii = i
   else:
     ii = i + 1
-  return ii    
-  
+  return ii
+
 # ======================================================================
 
 if __name__ == '__main__':
