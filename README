@@ -1,0 +1,19 @@
+
+This is pappy:
+"Probability distribution Amplification and Plotting in Python"
+
+Python utilities for manipulating and plotting probability density 
+functions, stored as importance-weighted lists of samples.
+
+Authors: Phil Marshall <dr.phil.marshall@gmail.com> 
+     and Daniel Foreman-Mackey <danfm@nyu.edu>
+Date: 12 December, 2011
+
+
+Installation:
+
+  python setup.py install
+
+
+To-do list:
+
