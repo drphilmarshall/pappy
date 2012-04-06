@@ -64,6 +64,7 @@ def CornerPlotter(argv):
     CornerPlotter.py -w 1 -L 2 -n 3,4,5 J2141-disk_bulge.txt,gray,outlines
 
   BUGS
+    - Only works from command line at the moment!
     - Tick labels overlap, cannot remove first and last tick mark
     - Figure has no legend
     - no overlay of 1-D priors
@@ -111,8 +112,14 @@ def CornerPlotter(argv):
           return
       else:
           assert False, "unhandled option"
-
+  
   # Check for datafiles in array args:
+
+  # BUG: calling CornerPlotter from python, this line is needed for args 
+  # to be treated as a list of strings, not a list of characters 
+  # args = [args]
+  # But then the command line version does not work...
+
   if len(args) > 0:
     datafiles = []
     colors = []
@@ -121,7 +128,9 @@ def CornerPlotter(argv):
       pieces = args[i].split(',')
       if len(pieces) != 3:
         print "ERROR: supply input data as 'filename,color,style'"
-        exit()
+        print "args[i] = ",args[i]
+        print "pieces = ",pieces
+        return
       datafiles = datafiles + [pieces[0]]
       colors = colors + [pieces[1]]
       styles = styles + [pieces[2]]
@@ -257,7 +266,7 @@ def CornerPlotter(argv):
       lineafterhash = labelsline.split('#')
       if len(lineafterhash) != 2:
         print 'ERROR: first line of file is not #-marked, comma-separated list of labels'
-        exit()
+        return
       else:
         labels = lineafterhash[1].split(',')
         if vb: print "Plotting",npars," parameters: ",labels
@@ -272,7 +281,7 @@ def CornerPlotter(argv):
         if (nlimits/2 != data.shape[1]):
           print 'ERROR: found ',nlimits,'axis limits for',data.shape[1],'columns:'
           print limitstrings
-          exit()
+          return
         else:
           ii = 0
           for i in index:
@@ -443,7 +452,7 @@ def CornerPlotter(argv):
   pylab.savefig(output,dpi=300)
   print "\nFigure saved to file:",output
 
-  exit()
+  return
 
 # ======================================================================
 # Subroutine to plot 1D PDF as histogram
@@ -478,7 +487,7 @@ def pdf1d(d,imp,bins,smooth,color):
     print positions
     print "ERROR: And here's the requested bins:"
     print bins
-    sys.exit()
+    return
 
 #  result = "$"+str(median)+"^{+"+str(errplus)+"}_{-"+str(errminus)+"}$"
   result = format_point_estimate(median,errplus,errminus)
@@ -551,7 +560,7 @@ def meansd(x,wht=[0]):
     wht = numpy.ones(N)
   elif len(wht) != N:
     print "ERROR: data and wht arrays don't match in meansd:",N,len(wht)
-    sys.exit()
+    return np.inf,np.inf
 
   mean = numpy.sum(x*wht)/numpy.sum(wht)
   var = numpy.sum((x-mean)*wht*(x-mean))/numpy.sum(wht)
@@ -608,7 +617,7 @@ def format_point_estimate(x,a,b):
 
   if a <= 0 or b <= 0:
     print "ERROR: this should not happen: a,b = ",a,b
-    sys.exit()
+    return np.inf
 
   loga = numpy.log10(a)
   if loga > 0:
