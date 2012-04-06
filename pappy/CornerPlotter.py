@@ -80,7 +80,7 @@ def CornerPlotter(argv):
   except getopt.GetoptError, err:
       # print help information and exit:
       print str(err) # will print something like "option -a not recognized"
-      print __doc__
+      print CornerPlotter.__doc__
       return
 
   vb = False
@@ -107,7 +107,7 @@ def CornerPlotter(argv):
       elif o in ("-o","--output"):
           output = a
       elif o in ("-h", "--help"):
-          print USAGE
+          print CornerPlotter.__doc__
           return
       else:
           assert False, "unhandled option"
@@ -130,7 +130,7 @@ def CornerPlotter(argv):
       print "using following colors:",colors
       if eps: "Output will be postscript"
   else :
-    print USAGE
+    print CornerPlotter.__doc__
     return
 
   # --------------------------------------------------------------------
