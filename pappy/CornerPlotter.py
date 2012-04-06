@@ -57,6 +57,8 @@ def CornerPlotter(argv):
 
   EXAMPLES
 
+    CornerPlotter.py thetas.cpt,blue,shaded
+
     CornerPlotter.py -w 1 -L 2 --plot-points J2141-disk_bulge.txt,red,shaded
 
     CornerPlotter.py -w 1 -L 2 -n 3,4,5 J2141-disk_bulge.txt,gray,outlines
@@ -215,7 +217,7 @@ def CornerPlotter(argv):
       for piece in pieces:
         index.append(int(piece) - 1)
       npars = len(index)
-      print "Only using data in",npars,"columns: "
+      print "Only using data in",npars,"columns (",index,"): "
 
     # Now parameter list is in index - which is fixed for other datasets
 
