@@ -155,7 +155,7 @@ def CornerPlotter(argv):
     right=0.95,\
     top=0.95,\
     wspace=0.04,\
-    hspace=0.08)
+    hspace=0.04)
   fig.subplots_adjust(**adjustprops)
 
   # No. of bins used:
@@ -301,16 +301,19 @@ def CornerPlotter(argv):
       col = index[i]
       # Get data subarray, and measure its mean and stdev:
       d = data[:,col].copy()
-      mean,stdev = meansd(d,wht=wht)
-      if vb: print "col = ",col," mean,stdev = ",mean,stdev
-      # Set smoothing scale for this parameter, in physical units:
-      smooth[i] = 0.1*stdev
+      mean,stdev,Neff = meansd(d,wht=wht)
+      if vb: print "col = ",col," mean,stdev,nd = ",mean,stdev,Neff
+      
+      # Set smoothing scale for this parameter, in physical units.
+      smooth[i] = 4.0*stdev/(Neff**0.33)
+      
       # Cf Jullo et al 2007, who use a bin size given by
       #  w = 2*IQR/N^(1/3)  for N samples, interquartile range IQR
       # For a Gaussian, IQR is not too different from 2sigma. 4sigma/N^1/3?
       # Also need N to be the effective number of parameters - return
       # form meansd as sum of weights!
       # Set 5 sigma limits:
+      
       dylimits[i,0] = mean - 5*stdev
       dylimits[i,1] = mean + 5*stdev
 
@@ -333,7 +336,7 @@ def CornerPlotter(argv):
         limits[i,1] = limits[i,1] - tiny*abs(limits[i,1])
 
     # Good - limits are set.
-
+    
     # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
     # Loop over plotting panels. Arrangement is bottom left hand corner,
@@ -459,6 +462,8 @@ def CornerPlotter(argv):
 
 def pdf1d(d,imp,bins,smooth,color):
 
+  from scipy import ndimage
+
   pylab.xlim([bins[0],bins[-1]])
 
   # Bin the data in 1D, return bins and heights
@@ -479,27 +484,33 @@ def pdf1d(d,imp,bins,smooth,color):
   errplus = numpy.abs(pct84 - pct50)
   errminus = numpy.abs(pct50 - pct16)
 
-  # Check for failure:
-  if errplus == 0 or errminus == 0:
-    print "ERROR: zero width credible region. Here's the histogram:"
-    print curve
-    print "ERROR: And the corresponding positions:"
-    print positions
-    print "ERROR: And here's the requested bins:"
-    print bins
-    return
+#   # Check for failure:
+#   if errplus == 0 or errminus == 0:
+#     print "WARNING: zero width credible region. "
+#     print "             pct16 = ",pct16
+#     print "            median = ",median
+#     print "             pct84 = ",pct84
+#     print "         Here are the histogram values:"
+#     print curve
+#     print "         and the corresponding positions:"
+#     print positions
+#     # return
 
 #  result = "$"+str(median)+"^{+"+str(errplus)+"}_{-"+str(errminus)+"}$"
   result = format_point_estimate(median,errplus,errminus)
 
-  # Plot the PDF
-  pylab.plot(positions[:-1],curve,drawstyle='steps-mid',color=color)
+  # Smooth the PDF:
+  scurve = ndimage.gaussian_filter1d(curve,smooth)
+  norm = sum(scurve)
+  scurve = scurve/norm
 
-  # # Smooth the PDF:
-  # H = ndimage.gaussian_filter(H,smooth)
+  # Plot the PDF
+  # pylab.plot(positions[:-1],curve,drawstyle='steps-mid',color=color)
+  pylab.plot(positions[:-1],scurve,drawstyle='line',color=color)
 
   # print "1D histogram: min,max = ",curve.min(),curve.max()
-  hmax = curve.max()
+  # hmax = curve.max()
+  hmax = scurve.max()
 
 #   print "Plotted 1D histogram with following axes limits:"
 #   print "  extent =",(bins[0],bins[-1])
@@ -553,20 +564,26 @@ def pdf2d(ax,ay,imp,xbins,ybins,smooth,color,style):
 # ======================================================================
 # Subroutine to return mean and stdev of numpy.array x
 
-def meansd(x,wht=[0]):
+def meansd(x,wht=None):
 
   N = len(x)
-  if len(wht) == 1:
+  if (wht == None):
     wht = numpy.ones(N)
   elif len(wht) != N:
     print "ERROR: data and wht arrays don't match in meansd:",N,len(wht)
-    return np.inf,np.inf
-
+    return np.inf,np.inf,np.inf
+  
+  wht = wht/numpy.max(wht)
+  
+  meanwht = numpy.sum(wht*wht)/numpy.sum(wht)
+  varwht = numpy.sum((wht-meanwht)*wht*(wht-meanwht))/numpy.sum(wht)
+  Neff = N/(1.0+varwht)
+  
   mean = numpy.sum(x*wht)/numpy.sum(wht)
   var = numpy.sum((x-mean)*wht*(x-mean))/numpy.sum(wht)
-  stdev = numpy.sqrt((var)*float(N)/float(N-1))
+  stdev = numpy.sqrt(var)
 
-  return mean,stdev
+  return mean,stdev,Neff
 
 # ======================================================================
 # Subroutine to return median and percentiles of numpy.array x
@@ -616,19 +633,23 @@ def format_point_estimate(x,a,b):
   # print "x,a,b = ",x,a,b
 
   if a <= 0 or b <= 0:
-    print "ERROR: this should not happen: a,b = ",a,b
-    return np.inf
+    print "Warning: one error bar is zero-sized: x +a/-b where a,b = ",a,b
+    # return 'No estimate possible'
 
-  loga = numpy.log10(a)
-  if loga > 0:
-    intloga = int(loga)
-  else:
-    intloga = int(loga) - 1
-  logb = numpy.log10(a)
-  if logb > 0:
-    intlogb = int(logb)
-  else:
-    intlogb = int(logb) - 1
+  if a > 0:
+    loga = numpy.log10(a)
+    if loga > 0:
+      intloga = int(loga)
+    else:
+      intloga = int(loga) - 1
+  else: intloga = 1e32    
+  if b > 0:    
+    logb = numpy.log10(b)
+    if logb > 0:
+      intlogb = int(logb)
+    else:
+      intlogb = int(logb) - 1
+  else: intlogb = 1e32    
   # print "intloga,intlogb = ", intloga,intlogb
   # Go one dp further for extra precision...
   k = numpy.min([intloga,intlogb]) - 1
