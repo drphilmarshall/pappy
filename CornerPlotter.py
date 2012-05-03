@@ -60,11 +60,9 @@ def CornerPlotter(argv):
 
   EXAMPLES
 
-    CornerPlotter.py thetas.cpt,blue,shaded
+    CornerPlotter.py examples/thetas.cpt,blue,shaded
 
-    CornerPlotter.py -w 1 -L 2 --plot-points J2141-disk_bulge.txt,red,shaded
-
-    CornerPlotter.py -w 1 -L 2 -n 3,4,5 J2141-disk_bulge.txt,gray,outlines
+    CornerPlotter.py -w 1 -n 2,3,4 examples/localgroup.cpt,red,shaded
 
   BUGS
     - Only works from command line at the moment!
@@ -124,8 +122,10 @@ def CornerPlotter(argv):
   # to be treated as a list of strings, not a list of characters 
   # args = [args]
   # But then the command line version does not work...
-  
   # Partial solution - split useful functions into pappy module. PJM
+
+  # args = numpy.array([args])  might help?
+
 
   if len(args) > 0:
     datafiles = []

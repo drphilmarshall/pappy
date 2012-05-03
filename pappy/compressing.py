@@ -9,7 +9,7 @@ samples, such as means, percentiles and so on.
 # ======================================================================
 # Globally useful modules:
 
-import string,numpy,pylab,sys,getopt
+import string,numpy,pylab,sys,getopt,os
 
 import pappy
 
@@ -67,6 +67,28 @@ def number_with_combined_probability_mass_of(p,wht):
   level = swht[cswht > cswht.max()*(1-p)].min()
 
   return len(numpy.where(swht > level)[0])
+
+# ======================================================================
+# Compute probability of x being greater/less than x0:
+
+def probability_of(x,cf,x0,wht):
+
+  index = numpy.argsort(x)
+  xs = x[index]
+  ws = wht[index]
+  cs = ws.cumsum()
+  # Normalise:
+  cs = cs/cs[-1]
+  p = cs[xs>x0].min()
+  
+  if cf == 'less than':
+    percentage = (1.0 - p)*100.0
+  elif cf == 'greater than':
+    percentage = p*100.0
+  else:
+    raise "Unrecognised comparison"+cf
+    
+  return nint(percentage)
 
 # ======================================================================
 # Given normalised histogram, return median and uncertainty based on
@@ -150,8 +172,10 @@ def format_point_estimate(x,a,b):
   else: 
     intlogb = 1e32    
   # print "intloga,intlogb = ", intloga,intlogb
+  
+  k = int(numpy.min([intloga,intlogb]))
   # Go one dp further for extra precision...
-  k = int(numpy.min([intloga,intlogb])) - 1
+  k -= 1
   
   if k > 100:
     estimate = "undefined"
@@ -225,4 +249,29 @@ def nint(x):
 # 
 #   return p
 # 
+# ======================================================================
+# Testing:
+
+if __name__ == '__main__':
+    
+  datafile = os.environ['PAPPY_DIR']+'/examples/localgroup.cpt' 
+  data = numpy.loadtxt(datafile)
+  wht = data[:,0].copy()
+  labels,limits,dummy = pappy.read_header(datafile)
+
+  col = 1  # M_MW
+
+  d = data[:,col].copy()
+  mean,stdev,Neff,N95 = pappy.meansd(d,wht=wht)
+  median,errplus,errminus = pappy.compress_samples(d,wht=wht,ci=95)
+  estimate = pappy.format_point_estimate(median,errplus,errminus)  
+  print "  95% limits: ",labels[col],"=",estimate
+   
+  col = 3 # M_M31 / M_MW
+  
+  d = data[:,col].copy()
+  p = probability_of(d,'greater than',0.0,wht)
+  print "  Pr(M1 > M2) = ",p,"%"
+
+
 # ======================================================================

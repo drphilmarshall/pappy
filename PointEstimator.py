@@ -32,6 +32,10 @@ def PointEstimator(argv):
       1) Parameter names separated by commas. These names will
            be used as labels on the plots, and should be in latex.
       2) Parameter ranges [min,max,] for plot axes.
+    
+    Best to use histogram if Neff is small. May be faster to work 
+    directly from samples if Neff is large, but there's probably not 
+    much in it.
 
   USAGE
     PointEstimator.py [flags]
@@ -44,19 +48,21 @@ def PointEstimator(argv):
     file          Name of textfile containing data
 
   OPTIONAL INPUTS
+    -s            Work directly from samples, rather than making a histogram
     -n --columns  List of columns to plot [all] NB. inputs are one-indexed!
     -w wcol       Column number of sample weight
     -L Lcol       Index of column containing likelihood of sample (to be ignored)
     -t --terse    Terse output (one line per parameter)
+    -c --credibility cred   % of samples within uncertainties 
 
   OUTPUTS
     stdout        Useful information
 
   EXAMPLES
 
-    PointEstimator.py -w 1 thetas.cpt
+    PointEstimator.py -w 1 examples/thetas.cpt
     
-    PointEstimator.py -t -w 1 -n 2,3,4,5 thetas.cpt
+    PointEstimator.py -t -w 1 -n 2,3,4 examples/localgroup.cpt,red,shaded
 
   BUGS
 
@@ -67,7 +73,7 @@ def PointEstimator(argv):
   # --------------------------------------------------------------------
 
   try:
-      opts, args = getopt.getopt(argv, "hvtw:n:",["help","verbose","terse","columns"])
+      opts, args = getopt.getopt(argv, "hvstw:n:c:",["help","verbose","terse","columns","credibility"])
   except getopt.GetoptError, err:
       # print help information and exit:
       print str(err) # will print something like "option -a not recognized"
@@ -79,6 +85,8 @@ def PointEstimator(argv):
   wcol = -1
   Lcol = -1
   columns = 'All'
+  cred = 68
+  histogram = True
   # NB. wcol is assumed to be entered indexed to 1!
   for o,a in opts:
       if o in ("-v", "--verbose"):
@@ -87,10 +95,14 @@ def PointEstimator(argv):
           longwinded = False
       elif o in ("-n","--columns"):
           columns = a
+      elif o in ("-c", "--credibility"):
+          cred = a
       elif o in ("-w"):
           wcol = int(a) - 1
       elif o in ("-L"):
           Lcol = int(a) - 1
+      elif o in ("-s"):
+          histogram = False
       elif o in ("-h", "--help"):
           print PointEstimator.__doc__
           return
@@ -168,11 +180,23 @@ def PointEstimator(argv):
     d = data[:,col].copy()
 
     mean,stdev,Neff,N95 = pappy.meansd(d,wht=wht)
-    median,errplus,errminus = pappy.compress_samples(d,wht=wht,ci=68)
+    
+    if histogram:
+      dylimits = numpy.zeros([2])
+      dylimits[0] = mean - 10*stdev
+      dylimits[1] = mean + 10*stdev
+      nbins = 161
+      bins = numpy.linspace(dylimits[0],dylimits[1],nbins)
+      h,x = numpy.histogram(d,weights=wht,bins=bins,range=[bins[0],bins[-1]])
+      norm = numpy.sum(h)
+      h = h/norm      
+      median,errplus,errminus = pappy.compress_histogram(h,x,ci=cred)
+    else:
+      median,errplus,errminus = pappy.compress_samples(d,wht=wht,ci=cred)
 
     estimate = pappy.format_point_estimate(median,errplus,errminus)
     if longwinded: 
-      print "  Par no.",col+1,",",labels[col],"=",estimate
+      print "  Par no.",col+1,",",labels[col].strip(),"=",estimate
     else:
       print estimate
 
