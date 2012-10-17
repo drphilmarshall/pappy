@@ -61,7 +61,7 @@ def pdf2d(ax,ay,imp,xbins,ybins,smooth,color,style):
   lvl00 = 2*sortH.max()
   lvl68 = sortH[cumH>cumH.max()*0.32].min()
   lvl95 = sortH[cumH>cumH.max()*0.05].min()
-#   lvl99 = sortH[cumH>cumH.max()*0.003].min()
+  lvl99 = sortH[cumH>cumH.max()*0.003].min()
 
 #   print "2D histogram: min,max = ",H.min(),H.max()
 #   print "Contour levels: ",[lvl00,lvl68,lvl95,lvl99]
@@ -69,8 +69,8 @@ def pdf2d(ax,ay,imp,xbins,ybins,smooth,color,style):
   if style == 'shaded':
 
     # Plot shaded areas first:
-    # pylab.contourf(H.T,[lvl99,lvl95],colors=color,alpha=0.1,\
-    #                extent=(xbins[0],xbins[-1],ybins[0],ybins[-1]))
+    pylab.contourf(H.T,[lvl99,lvl95],colors=color,alpha=0.1,\
+                   extent=(xbins[0],xbins[-1],ybins[0],ybins[-1]))
     pylab.contourf(H.T,[lvl95,lvl68],colors=color,alpha=0.4,\
                    extent=(xbins[0],xbins[-1],ybins[0],ybins[-1]))
     pylab.contourf(H.T,[lvl68,lvl00],colors=color,alpha=0.7,\
@@ -78,10 +78,10 @@ def pdf2d(ax,ay,imp,xbins,ybins,smooth,color,style):
   # endif
 
   # Always plot outlines:
-  # pylab.contour(H.T,[lvl68,lvl95,lvl99],colors=color,\
-  #                 extent=(xbins[0],xbins[-1],ybins[0],ybins[-1]))
-  pylab.contour(H.T,[lvl68,lvl95],colors=color,\
+  pylab.contour(H.T,[lvl68,lvl95,lvl99],colors=color,\
                   extent=(xbins[0],xbins[-1],ybins[0],ybins[-1]))
+#   pylab.contour(H.T,[lvl68,lvl95],colors=color,\
+#                   extent=(xbins[0],xbins[-1],ybins[0],ybins[-1]))
 
   return
 

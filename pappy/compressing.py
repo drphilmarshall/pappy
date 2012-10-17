@@ -178,7 +178,7 @@ def format_point_estimate(x,a,b):
   k -= 1
   
   if k > 100:
-    estimate = "undefined"
+    estimate = "undefined, PDF too narrow to measure"
   
   else:
     base = 10.0**k
