@@ -41,7 +41,7 @@ def CornerPlotter(argv):
     -h                Print this message [0]
     -v                Verbose operation [0]
     --eps             Postscript output
-    --only-2D         Don't bother plotting 1D PDFs.
+    --just-2D         Don't bother plotting 1D PDFs.
     -c --conditional  Plot 2D conditional distributions only
 
   INPUTS
@@ -54,6 +54,7 @@ def CornerPlotter(argv):
     -L iL         Index of column containing likelihood of sample
     --plot-points Plot the samples themselves
     -o --output   Name of output file
+    --test        Write out a set of test commands and exit
 
   OUTPUTS
     stdout        Useful information
@@ -62,18 +63,13 @@ def CornerPlotter(argv):
 
   EXAMPLES
 
-    CornerPlotter.py examples/thetas.cpt,blue,shaded
-
-    CornerPlotter.py -w 1 -n 2,3,4 examples/localgroup.cpt,red,shaded
-
-    CornerPlotter.py --only-2D -w 1 -n 3,4 examples/localgroup.cpt,purple,shaded
-    
-    CornerPlotter.py --conditional --plot-points -n 2,3,4 examples/localgroup.cpt,green,shaded
-  
+     CornerPlotter.py --test
+     
   BUGS
     - Only works from command line at the moment!
     - Tick labels overlap, cannot remove first and last tick mark
     - Figure has no legend
+    - Overlay of 1D estimates not enabled
     - No overlay of 1-D priors
     - Lines are too thin
 
@@ -86,7 +82,7 @@ def CornerPlotter(argv):
   # --------------------------------------------------------------------
 
   try:
-      opts, args = getopt.getopt(argv, "hvcew:L:n:o:",["help","verbose","conditional","eps","plot-points","only-2D","columns","output"])
+      opts, args = getopt.getopt(argv, "hvcew:L:n:o:",["help","verbose","test","conditional","eps","plot-points","just-2D","columns","output"])
   except getopt.GetoptError, err:
       # print help information and exit:
       print str(err) # will print something like "option -a not recognized"
@@ -100,25 +96,30 @@ def CornerPlotter(argv):
   
   plotpoints = False
   eps = False
+  plotlegend = True
   
   plot2D = True
   plot1D = True
   conditional = False
   
   columns = 'All'
-  output = 'Null'
+  outfile = None
+  
+  test = False
   
   # NB. wcol and Lcol are assumed to be entered indexed to 1!
-  for o,a in opts:
+  for o,a in opts:      
       if o in ("-v", "--verbose"):
           vb = True
-      elif o in ("-n","--columns"):
+      elif o in ("--test"):
+          test = True
+      elif o in ("-n", "--columns"):
           columns = a
       elif o in ("--plot-points"):
           plotpoints = True
-      elif o in ("--only-2D"):
+      elif o in ("--just-2D"):
           plot1D = False
-      elif o in ("-c","--conditional"):
+      elif o in ("-c", "--conditional"):
           conditional = True
           plot1D = False
       elif o in ("-w"):
@@ -127,13 +128,31 @@ def CornerPlotter(argv):
           Lcol = int(a) - 1
       elif o in ("--eps"):
           eps = True
-      elif o in ("-o","--output"):
-          output = a
+      elif o in ("-o", "--output"):
+          outfile = a
       elif o in ("-h", "--help"):
           print CornerPlotter.__doc__
           return
       else:
-          assert False, "unhandled option"
+          print "Couldn't understand option,argument: ",o,a
+          assert False
+
+  # Test cases:
+  if test:
+    print 'Try these:'
+    print '  CornerPlotter.py -o test1.png examples/thetas.cpt,blue,shaded'
+    print '  CornerPlotter.py -o test2.png -w 1 -n 2,3,4 examples/localgroup.cpt,red,shaded'
+    print '  CornerPlotter.py -o test3.png --just-2D -w 1 -n 3,4 examples/localgroup.cpt,purple,shaded'
+    print '  CornerPlotter.py -o test4.png --conditional --plot-points -n 2,3,4 examples/localgroup.cpt,green,shaded'
+    return
+  
+  # Sort out output filename:
+  print outfile
+  if outfile == None:
+    if eps:
+      outfile = "cornerplot.eps"
+    else:
+      outfile = "cornerplot.png"
   
   # Check for datafiles in array args:
 
@@ -145,26 +164,28 @@ def CornerPlotter(argv):
 
   # args = numpy.array([args])  might help?
 
-
   if len(args) > 0:
     datafiles = []
     colors = []
     styles = []
+    legends = []
     for i in range(len(args)):
       pieces = args[i].split(',')
-      if len(pieces) != 3:
-        print "ERROR: supply input data as 'filename,color,style'"
-        print "args[i] = ",args[i]
-        print "pieces = ",pieces
-        return
+      if len(pieces) == 1: pieces = pieces + ['black']
+      if len(pieces) == 2: pieces = pieces + ['shaded']
+      if len(pieces) == 3: 
+                           pieces = pieces + [' ']
+                           plotlegend = False
       datafiles = datafiles + [pieces[0]]
       colors = colors + [pieces[1]]
       styles = styles + [pieces[2]]
+      legends = legends + [pieces[3]]
     if vb:
       print "Making corner plot of data in following files:",datafiles
       print "using following colors:",colors
       if not plot1D: print "Leaving out 1D plots"
-      if eps: print "Output will be postscript"
+      print "Output will be stored in "+output
+      if eps: print "and will be in postscript format"
   else :
     print CornerPlotter.__doc__
     return
@@ -205,9 +226,9 @@ def CornerPlotter(argv):
     #     else:
     #       style = 'shaded'
     style = styles[k]
-    legend = datafile
+    legend = legends[k]
 
-    print "\nPlotting PDFs given in "+datafile+" as "+color+" "+style
+    print "\nPlotting PDFs given in "+datafile+" as "+color+" "+style+" contours, and labelled as '"+legend+"'"
 
     # Read in data:
     data = numpy.loadtxt(datafile)
@@ -394,6 +415,8 @@ def CornerPlotter(argv):
           if k == 0: hmax[i] = dummy
 
           # Write the estimate on the plot?
+          
+          
 
           # Force axes to obey limits:
           pylab.axis([limits[i,0],limits[i,1],0.0,1.2*hmax[i]])
@@ -470,17 +493,16 @@ def CornerPlotter(argv):
 
   # endfor
 
+  # Plot legend? In opposite corner if ngrid > 1, otherwise?
+  if plotlegend:
+    pass
+  
   # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
   # Plot graph to file:
-  if output == 'Null':
-    if eps:
-      output = "cornerplot.eps"
-    else:
-      output = "cornerplot.png"
-
-  pylab.savefig(output,dpi=300)
-  print "\nFigure saved to file:",output
+  
+  pylab.savefig(outfile,dpi=300)
+  print "\nFigure saved to file:",outfile
 
   return
 
