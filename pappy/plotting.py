@@ -35,7 +35,7 @@ def pdf1d(d,imp,bins,smooth,color):
   p = p/norm
 
   # Plot:
-  pylab.plot(x[:-1],p,drawstyle='line',color=color)
+  pylab.plot(x[:-1],p,drawstyle='line',color=color)  
 
   return p.max(),result
 

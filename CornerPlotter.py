@@ -74,7 +74,8 @@ def CornerPlotter(argv):
     - Only works from command line at the moment!
     - Tick labels overlap, cannot remove first and last tick mark
     - Figure has no legend
-    - no overlay of 1-D priors
+    - No overlay of 1-D priors
+    - Lines are too thin
 
   HISTORY
     2010-05-06 started Marshall/Auger (UCSB)
@@ -184,6 +185,8 @@ def CornerPlotter(argv):
     hspace=0.04)
   fig.subplots_adjust(**adjustprops)
 
+  # Need to set global linewidth thicker here!
+
   # No. of bins used:
   nbins = 161
   # Small tweak to prevent too many numeric tick marks
@@ -273,7 +276,7 @@ def CornerPlotter(argv):
 
     params = { 'axes.labelsize': bfs,
                 'text.fontsize': bfs,
-              'legend.fontsize': sfs,
+              'legend.fontsize': bfs,
               'xtick.labelsize': sfs,
               'ytick.labelsize': sfs}
     pylab.rcParams.update(params)
@@ -389,6 +392,8 @@ def CornerPlotter(argv):
           dummy,estimate = pappy.pdf1d(d1,wht,bins[i],smooth[i],color)
           print "  Par no.",col+1,",",labels[col],"=",estimate
           if k == 0: hmax[i] = dummy
+
+          # Write the estimate on the plot?
 
           # Force axes to obey limits:
           pylab.axis([limits[i,0],limits[i,1],0.0,1.2*hmax[i]])
