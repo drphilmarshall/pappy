@@ -172,7 +172,7 @@ def CornerPlotter(argv):
     for i in range(len(args)):
       pieces = args[i].split(',')
       if len(pieces) == 1: pieces = pieces + ['black']
-      if len(pieces) == 2: pieces = pieces + ['shaded']
+      if len(pieces) == 2: pieces = pieces + ['outlined']
       if len(pieces) == 3: 
                            pieces = pieces + [' ']
                            plotlegend = False
