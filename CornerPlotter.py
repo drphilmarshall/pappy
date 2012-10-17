@@ -38,10 +38,11 @@ def CornerPlotter(argv):
     CornerPlotter.py [flags]
 
   FLAGS
-    -h            Print this message [0]
-    -v            Verbose operation [0]
-    --eps         Postscript output
-    --only-2D     Don't bother plotting 1D PDFs.
+    -h                Print this message [0]
+    -v                Verbose operation [0]
+    --eps             Postscript output
+    --only-2D         Don't bother plotting 1D PDFs.
+    -c --conditional  Plot 2D conditional distributions only
 
   INPUTS
     file1,color1  Name of textfile containing data, and color to use
@@ -66,7 +67,9 @@ def CornerPlotter(argv):
     CornerPlotter.py -w 1 -n 2,3,4 examples/localgroup.cpt,red,shaded
 
     CornerPlotter.py --only-2D -w 1 -n 3,4 examples/localgroup.cpt,purple,shaded
-
+    
+    CornerPlotter.py --conditional --plot-points -n 2,3,4 examples/localgroup.cpt,green,shaded
+  
   BUGS
     - Only works from command line at the moment!
     - Tick labels overlap, cannot remove first and last tick mark
@@ -82,7 +85,7 @@ def CornerPlotter(argv):
   # --------------------------------------------------------------------
 
   try:
-      opts, args = getopt.getopt(argv, "hvew:L:n:o:",["help","verbose","eps","plot-points","only-2D","columns","output"])
+      opts, args = getopt.getopt(argv, "hvcew:L:n:o:",["help","verbose","conditional","eps","plot-points","only-2D","columns","output"])
   except getopt.GetoptError, err:
       # print help information and exit:
       print str(err) # will print something like "option -a not recognized"
@@ -93,12 +96,17 @@ def CornerPlotter(argv):
   
   wcol = -1
   Lcol = -1
+  
   plotpoints = False
   eps = False
+  
   plot2D = True
   plot1D = True
+  conditional = False
+  
   columns = 'All'
   output = 'Null'
+  
   # NB. wcol and Lcol are assumed to be entered indexed to 1!
   for o,a in opts:
       if o in ("-v", "--verbose"):
@@ -108,7 +116,9 @@ def CornerPlotter(argv):
       elif o in ("--plot-points"):
           plotpoints = True
       elif o in ("--only-2D"):
-          plot2D = True
+          plot1D = False
+      elif o in ("-c","--conditional"):
+          conditional = True
           plot1D = False
       elif o in ("-w"):
           wcol = int(a) - 1
@@ -416,7 +426,7 @@ def CornerPlotter(argv):
           # Plot 2D PDF, defined in subroutine below
           if vb: print "Calling pdf2d for col,row = ",col,row
           fwhm = 0.5*(smooth[i]+smooth[j])
-          pappy.pdf2d(d1,d2,wht,bins[i],bins[j],fwhm,color,style)
+          pappy.pdf2d(d1,d2,wht,bins[i],bins[j],fwhm,color,style,conditional=conditional)          
 
           # If we are just plotting one file, overlay samples:
           if (len(datafiles) == 1 and plotpoints):

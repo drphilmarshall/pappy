@@ -42,7 +42,7 @@ def pdf1d(d,imp,bins,smooth,color):
 # ======================================================================
 # Subroutine to plot 2D PDF as contours
 
-def pdf2d(ax,ay,imp,xbins,ybins,smooth,color,style):
+def pdf2d(ax,ay,imp,xbins,ybins,smooth,color,style,conditional=False):
 
   from scipy import ndimage
 
@@ -54,6 +54,18 @@ def pdf2d(ax,ay,imp,xbins,ybins,smooth,color,style):
 
   # Smooth the PDF:
   H = ndimage.gaussian_filter(H,smooth)
+  
+  # - - - - - - - - - - - - - - - -
+  # For a conditional PDF Pr(y|x), normalise PDF in columns (constant x):
+  if conditional:
+    totalmass = sum(sum(H))
+    norm = numpy.outer(sum(H),numpy.ones(len(x)-1))
+    # Can only estimate conditional where there are enough points! Rough
+    # estimate - focus on 99.5% of the mass:
+    norm = norm * (norm > 0.005*totalmass)
+    # Renormalise, taking care of zeros!
+    H = H * (norm > 0.0) / (norm + (norm == 0.0))
+  # - - - - - - - - - - - - - - - -
 
   sortH = numpy.sort(H.flatten())
   cumH = sortH.cumsum()
