@@ -196,7 +196,7 @@ def PointEstimator(argv):
 
     estimate = pappy.format_point_estimate(median,errplus,errminus)
     if longwinded: 
-      print "  Par no.",col+1,",",labels[col].strip(),"=",estimate
+      print "  Par no.",col+1,":",labels[col].strip(),"=",estimate
     else:
       print estimate
 
