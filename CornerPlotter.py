@@ -41,6 +41,7 @@ def CornerPlotter(argv):
     -h            Print this message [0]
     -v            Verbose operation [0]
     --eps         Postscript output
+    --only-2D     Don't bother plotting 1D PDFs.
 
   INPUTS
     file1,color1  Name of textfile containing data, and color to use
@@ -64,6 +65,8 @@ def CornerPlotter(argv):
 
     CornerPlotter.py -w 1 -n 2,3,4 examples/localgroup.cpt,red,shaded
 
+    CornerPlotter.py --only-2D -w 1 -n 3,4 examples/localgroup.cpt,purple,shaded
+
   BUGS
     - Only works from command line at the moment!
     - Tick labels overlap, cannot remove first and last tick mark
@@ -79,7 +82,7 @@ def CornerPlotter(argv):
   # --------------------------------------------------------------------
 
   try:
-      opts, args = getopt.getopt(argv, "hvew:L:n:o:",["help","verbose","eps","plot-points","columns","output"])
+      opts, args = getopt.getopt(argv, "hvew:L:n:o:",["help","verbose","eps","plot-points","only-2D","columns","output"])
   except getopt.GetoptError, err:
       # print help information and exit:
       print str(err) # will print something like "option -a not recognized"
@@ -92,6 +95,8 @@ def CornerPlotter(argv):
   Lcol = -1
   plotpoints = False
   eps = False
+  plot2D = True
+  plot1D = True
   columns = 'All'
   output = 'Null'
   # NB. wcol and Lcol are assumed to be entered indexed to 1!
@@ -102,6 +107,9 @@ def CornerPlotter(argv):
           columns = a
       elif o in ("--plot-points"):
           plotpoints = True
+      elif o in ("--only-2D"):
+          plot2D = True
+          plot1D = False
       elif o in ("-w"):
           wcol = int(a) - 1
       elif o in ("-L"):
@@ -144,7 +152,8 @@ def CornerPlotter(argv):
     if vb:
       print "Making corner plot of data in following files:",datafiles
       print "using following colors:",colors
-      if eps: "Output will be postscript"
+      if not plot1D: print "Leaving out 1D plots"
+      if eps: print "Output will be postscript"
   else :
     print CornerPlotter.__doc__
     return
@@ -238,10 +247,16 @@ def CornerPlotter(argv):
 
     # Now parameter list is in index - which is fixed for other datasets
 
-    # Font sizes - can only be set when no. of panels is known:
+    # Font sizes - can only be set when no. of panels in grid is known:
     #   Big font sizes: {npars,bfs}={1,14},{2,13},{3,12},{4,10}
-    if npars < 4:
-      bfs = 15 - npars
+    
+    if plot1D:
+      ngrid = npars
+    else:
+      ngrid = npars - 1
+    
+    if ngrid < 4:
+      bfs = 20 - 2*ngrid
     else:
       bfs = 10
     sfs = bfs - 2
@@ -333,6 +348,7 @@ def CornerPlotter(argv):
     # ---------------------------------------------
     #21=0,4  | 22=1,4  | 23=2,4  | 24=3,4  | 25=4,4
 
+    
     for i in range(npars):
       col = index[i]
 
@@ -343,13 +359,13 @@ def CornerPlotter(argv):
       for j in range(i,npars):
         row = index[j]
 
-        # Move to next subplot:
-        panel = j*npars+i+1
-        pylab.subplot(npars,npars,panel)
+        if plot1D and j==i:
 
-        if j==i:
+          # Move to next subplot:
+          panel = j*ngrid+i+1
+          pylab.subplot(ngrid,ngrid,panel)
 
-          # Percentiles etc are too slow - get PDF1D to do it?
+#           # Percentiles etc are too slow - get PDF1D to do it?
 #           # Report some statistcs:
 #           if vb:
 #             pct = percentiles(d1,wht)
@@ -377,10 +393,23 @@ def CornerPlotter(argv):
           # Label x axis, only on the bottom panels:
           if j==npars-1:
             pylab.xlabel(labels[col])
+          plottedsomething = True
 
-        else:
+        elif plot2D and j!=i:
 
-          # Get 2nd data set:
+          # Move to next subplot:
+          if plot1D:
+            panel = j*ngrid+i+1
+          else:
+            #  i j panel
+            #  0 1   1 = (j-1)*ngrid+i+1
+            #  0 2   3
+            #  1 2   4
+            panel = (j-1)*ngrid+i+1
+            # print "XXXXX i,j,panel = ",i,j,panel
+          pylab.subplot(ngrid,ngrid,panel)
+
+         # Get 2nd data set:
           d2 = data[:,row].copy()
           if vb: print "Read in ",row,"th column of data: min,max = ",min(d2),max(d2)
 
@@ -411,10 +440,15 @@ def CornerPlotter(argv):
           if i==0 and j>0:
           # Label y axes in the left-hand panels
             pylab.ylabel(labels[row])
+          plottedsomething = True
+          
+        else:  
+          plottedsomething = False
 
-        if vb: print "Done subplot", panel,"= (", i, j,")"
-        if vb: print "  - plotting",labels[col],"vs",labels[row]
-        if vb: print "--------------------------------------------------"
+        if plottedsomething:
+          if vb: print "Done subplot", panel,"= (", i, j,")"
+          if vb: print "  - plotted",labels[col],"vs",labels[row]
+          if vb: print "--------------------------------------------------"
 
       # endfor
     # endfor
