@@ -50,6 +50,12 @@ def effective_number_of_samples(wht,method='simple_sum'):
     varwht = numpy.sum((wht-meanwht)*wht*(wht-meanwht))/numpy.sum(wht)
     Neff = N/(1.0+varwht)
 
+  elif method == 'Entropy':
+    # Neff based on the Shannon entropy formula
+    normedwht = wht/wht.sum()
+    H = -numpy.sum(normedwht*numpy.log(normedwht + 1E-300))
+    Neff = numpy.exp(H)
+
   else:
     # Simple sum:
     w = wht/wht.max()
