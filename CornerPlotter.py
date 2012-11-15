@@ -53,6 +53,7 @@ def CornerPlotter(argv):
     -w iw         Index of column containing weight of sample
     -L iL         Index of column containing likelihood of sample
     --plot-points Plot the samples themselves
+    -s --smooth x Plot contours that are smoother by factor x [def=1]
     -o --output   Name of output file
     --test        Write out a set of test commands and exit
 
@@ -82,7 +83,7 @@ def CornerPlotter(argv):
   # --------------------------------------------------------------------
 
   try:
-      opts, args = getopt.getopt(argv, "hvcew:L:n:o:",["help","verbose","test","conditional","eps","plot-points","just-2D","columns","output"])
+      opts, args = getopt.getopt(argv, "hvcew:L:n:o:s:",["help","verbose","test","conditional","eps","smooth","plot-points","just-2D","columns","output"])
   except getopt.GetoptError, err:
       # print help information and exit:
       print str(err) # will print something like "option -a not recognized"
@@ -107,6 +108,8 @@ def CornerPlotter(argv):
   
   test = False
   
+  smoothscale = 1.0
+  
   # NB. wcol and Lcol are assumed to be entered indexed to 1!
   for o,a in opts:      
       if o in ("-v", "--verbose"):
@@ -117,6 +120,8 @@ def CornerPlotter(argv):
           columns = a
       elif o in ("--plot-points"):
           plotpoints = True
+      elif o in ("-s","--smooth"):
+          smoothscale = float(a)
       elif o in ("--just-2D"):
           plot1D = False
       elif o in ("-c", "--conditional"):
@@ -329,7 +334,7 @@ def CornerPlotter(argv):
       if vb: print "col = ",col," mean,stdev,nd = ",mean,stdev,Neff,N95
       
       # Set smoothing scale for this parameter, in physical units.
-      smooth[i] = 0.5*4.0*stdev/(N95**0.33)
+      smooth[i] = smoothscale*0.5*4.0*stdev/(N95**0.33)
       
       # Cf Jullo et al 2007, who use a bin size given by
       #  w = 2*IQR/N^(1/3)  for N samples, interquartile range IQR
