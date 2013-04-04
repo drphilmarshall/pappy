@@ -51,37 +51,57 @@ def pdf2d(ax,ay,imp,xbins,ybins,smooth,color,style,conditional=False):
 
   # npts = int((ax.size/4)**0.5)
   H,x,y = pylab.histogram2d(ax,ay,weights=imp,bins=[xbins,ybins])
-
-  # Smooth the PDF:
-  H = ndimage.gaussian_filter(H,smooth)
   
-  # - - - - - - - - - - - - - - - -
+  totalmass = sum(H.flatten())
+
+  # Smooth the histogram into a PDF:
+  if conditional:
+  
+    ncolumns = len(H[0,:])
+    totalstdev = numpy.sqrt(numpy.var(ay))
+    for i in range(ncolumns):
+      p = H[i,:]
+      # Need to choose smoothing scale carefully here! Columns with fewer points need
+      # bigger smoothing scales:
+      norm = numpy.sum(p)
+      if (norm > 0.0):
+        yy = ybins[1:]
+        mean,stdev,Neff,N95 = pappy.meansd(yy,wht=p)
+        blur = (smooth + smooth*(stdev/totalstdev)**2)
+        # print "i,norm,totalmass, smooth,blur = ",i,norm,totalmass,smooth,blur
+        H[i,:] = ndimage.gaussian_filter1d(p.flatten(),blur)
+        
+  else:
+    H = ndimage.gaussian_filter(H,smooth)
+
   # For a conditional PDF Pr(y|x), normalise PDF in columns (constant x):
   if conditional:
-    totalmass = sum(sum(H))
-    norm = numpy.outer(sum(H),numpy.ones(len(x)-1))
-    # Can only estimate conditional where there are enough points! Rough
-    # estimate - focus on 99.5% of the mass:
-    norm = norm * (norm > 0.005*totalmass)
-    # Renormalise, taking care of zeros!
+    for i in range(len(H[0,:])):
+      p = H[i,:]
+      norm = numpy.sum(p.flatten())
+      # Can only estimate conditional where there are enough points! Rough
+      # estimate - focus on 99.9% of the mass:
+      norm = norm * (norm > 0.001*totalmass)
+      H[i,:] = p * (norm > 0.0) / (norm + (norm == 0.0))
+  else:
+    norm = numpy.sum(H.flatten())
     H = H * (norm > 0.0) / (norm + (norm == 0.0))
-  # - - - - - - - - - - - - - - - -
-
+  
   sortH = numpy.sort(H.flatten())
   cumH = sortH.cumsum()
   # 1, 2, 3-sigma, for the old school:
   lvl00 = 2*sortH.max()
   lvl68 = sortH[cumH>cumH.max()*0.32].min()
   lvl95 = sortH[cumH>cumH.max()*0.05].min()
-  lvl99 = sortH[cumH>cumH.max()*0.003].min()
+  lvl997 = sortH[cumH>cumH.max()*0.003].min()
 
 #   print "2D histogram: min,max = ",H.min(),H.max()
-#   print "Contour levels: ",[lvl00,lvl68,lvl95,lvl99]
+#   print "Contour levels: ",[lvl00,lvl68,lvl95,lvl997]
 
   if style == 'shaded':
 
     # Plot shaded areas first:
-    pylab.contourf(H.T,[lvl99,lvl95],colors=color,alpha=0.1,\
+    pylab.contourf(H.T,[lvl997,lvl95],colors=color,alpha=0.1,\
                    extent=(xbins[0],xbins[-1],ybins[0],ybins[-1]))
     pylab.contourf(H.T,[lvl95,lvl68],colors=color,alpha=0.4,\
                    extent=(xbins[0],xbins[-1],ybins[0],ybins[-1]))
@@ -90,7 +110,7 @@ def pdf2d(ax,ay,imp,xbins,ybins,smooth,color,style,conditional=False):
   # endif
 
   # Always plot outlines:
-  pylab.contour(H.T,[lvl68,lvl95,lvl99],colors=color,\
+  pylab.contour(H.T,[lvl68,lvl95,lvl997],colors=color,\
                   extent=(xbins[0],xbins[-1],ybins[0],ybins[-1]))
 #   pylab.contour(H.T,[lvl68,lvl95],colors=color,\
 #                   extent=(xbins[0],xbins[-1],ybins[0],ybins[-1]))

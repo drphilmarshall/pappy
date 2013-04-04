@@ -23,7 +23,7 @@ def meansd(x,wht=None):
     wht = numpy.ones(N)
   elif len(wht) != N:
     print "ERROR: data and wht arrays don't match in meansd:",N,len(wht)
-    return np.inf,np.inf,np.inf,np.inf
+    return numpy.inf,numpy.inf,numpy.inf,numpy.inf
 
 # Simple sum of weights:
   Neff = pappy.effective_number_of_samples(wht,method='simple')
