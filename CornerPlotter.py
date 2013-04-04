@@ -184,7 +184,7 @@ def CornerPlotter(argv):
       print "Making corner plot of data in following files:",datafiles
       print "using following colors:",colors
       if not plot1D: print "Leaving out 1D plots"
-      print "Output will be stored in "+output
+      print "Output will be stored in "+outfile
       if eps: print "and will be in postscript format"
   else :
     print CornerPlotter.__doc__
@@ -290,10 +290,10 @@ def CornerPlotter(argv):
       ngrid = npars - 1
     
     if ngrid < 4:
-      bfs = 20 - 2*ngrid
+      bfs = 24 - 2*ngrid
     else:
-      bfs = 10
-    sfs = bfs - 2
+      bfs = 18
+    sfs = bfs - 6
 
     params = { 'axes.labelsize': bfs,
                 'text.fontsize': bfs,
