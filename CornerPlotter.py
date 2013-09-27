@@ -152,7 +152,6 @@ def CornerPlotter(argv):
     return
   
   # Sort out output filename:
-  print outfile
   if outfile == None:
     if eps:
       outfile = "cornerplot.eps"
@@ -297,7 +296,7 @@ def CornerPlotter(argv):
     if ngrid < 4:
       bfs = 24 - 2*ngrid
     else:
-      bfs = 18
+      bfs = 16
     sfs = bfs - 6
 
     params = { 'axes.labelsize': bfs,
@@ -313,7 +312,7 @@ def CornerPlotter(argv):
     if k == 0:
  
       alllabels,alllimits,usedylimits = pappy.read_header(datafiles[k])
-      if vb: print 'No axis limits found, using 5-sigma ranges'
+      if (usedylimits and vb): print 'No axis limits found, using 5-sigma ranges'
       
       # Now pull out just the labels and limits we need:
       limits = numpy.zeros([npars,2])
@@ -356,11 +355,10 @@ def CornerPlotter(argv):
       if vb: print "col = ",col," smooth = ",smooth[i]
       if vb: print "binning limits:",dylimits[i,0],dylimits[i,1]
 
-    if (k == 0):
-      # Finalise limits, again at 1st datafile:
-      if (usedylimits == 1): limits = dylimits
+    # Optional: use dylimits as limits, again at 1st datafile:
+    if (k == 0 and usedylimits == 1): limits = dylimits
 
-      for i in range(npars):
+    for i in range(npars):
         limits[i,0] = limits[i,0] + tiny*abs(limits[i,0])
         limits[i,1] = limits[i,1] - tiny*abs(limits[i,1])
 
@@ -463,7 +461,8 @@ def CornerPlotter(argv):
 
           # If we are just plotting one file, overlay samples:
           if (len(datafiles) == 1 and plotpoints):
-            pylab.plot(d1,d2,'ko',ms=0.1)
+            ptsize = 4.0/numpy.log10(len(d))  # N=100 -> 2, N=10,000 -> 1
+            pylab.plot(d1,d2,'ko',ms=ptsize)
 
           # Force axes to obey limits:
           pylab.axis([limits[i,0],limits[i,1],limits[j,0],limits[j,1]])
