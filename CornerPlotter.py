@@ -294,10 +294,10 @@ def CornerPlotter(argv):
       ngrid = npars - 1
     
     if ngrid < 4:
-      bfs = 24 - 2*ngrid
+      bfs = 20 - 2*ngrid
     else:
-      bfs = 16
-    sfs = bfs - 6
+      bfs = 12
+    sfs = bfs - 2
 
     params = { 'axes.labelsize': bfs,
                 'text.fontsize': bfs,
