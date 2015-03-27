@@ -1,6 +1,6 @@
 
 
-## Probability Density Functions:Amplification and Plotting in Python
+## Probability Density Functions: Amplification and Plotting
 
 Python utilities for manipulating and plotting probability density functions, stored as importance-weighted lists of samples
 
