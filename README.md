@@ -2,8 +2,6 @@
 
 ## PDF Corner Plots
 
-![](https://raw.githubusercontent.com/drphilmarshall/pappy/master/examples/test2.png)
-
 Python script for plotting probability density functions, stored as importance-weighted lists of samples.
 
 [Phil Marshall](mailto:dr.phil.marshall@gmail.com) and [Daniel Foreman-Mackey](danfm@nyu.edu) since 12 December, 2011
@@ -33,6 +31,9 @@ Note the data format required: plain text with an informative header, that defin
     1.228662286689141346e-10 1.148898129665888135e+01 1.206671702374781496e+01 5.777357270889337260e-01 1.216860210104861117e+01
     9.115455789900011041e-01 1.220497250067228023e+01 1.144655000180502746e+01 -7.584224988672524370e-01 1.227479314997625259e+01
     ...
+
+Here's the `test2.png` corner plot:
     
-    
+![](https://raw.githubusercontent.com/drphilmarshall/pappy/master/examples/test2.png)
+
     
