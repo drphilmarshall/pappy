@@ -1,8 +1,10 @@
 
 
-## Probability Density Functions: Amplification and Plotting
+## PDF Corner Plots
 
-Python utilities for manipulating and plotting probability density functions, stored as importance-weighted lists of samples
+![](https://raw.githubusercontent.com/drphilmarshall/pappy/master/examples/test2.png)
+
+Python script for plotting probability density functions, stored as importance-weighted lists of samples.
 
 [Phil Marshall](mailto:dr.phil.marshall@gmail.com) and [Daniel Foreman-Mackey](danfm@nyu.edu) since 12 December, 2011
 
