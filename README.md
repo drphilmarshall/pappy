@@ -1,19 +1,19 @@
 
 
-# Probability distribution Amplification and Plotting in Python
+## Probability Density Functions:Amplification and Plotting in Python
 
 Python utilities for manipulating and plotting probability density functions, stored as importance-weighted lists of samples
 
 [Phil Marshall](mailto:dr.phil.marshall@gmail.com) and [Daniel Foreman-Mackey](danfm@nyu.edu) since 12 December, 2011
 
 
-## Installation
+### Installation
     
     setenv PAPPY_DIR ${HOME}/python/pappy
     setenv PATH ${PATH}:${PAPPY_DIR}
     setenv PYTHONPATH ${PAPPY_DIR}:${PYTHONPATH}
 
-## Getting started
+### Getting started
 
     CornerPlotter.py --test
 
